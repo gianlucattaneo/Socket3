@@ -1,9 +1,11 @@
-package SelectorExample;
+package socket3;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.CharBuffer;
+import java.nio.IntBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -11,6 +13,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class ConcurrentServer {
@@ -18,7 +21,7 @@ public class ConcurrentServer {
 	public static void main(String[] args) throws IOException {
 		Selector selector = Selector.open();
 		ServerSocketChannel server = ServerSocketChannel.open();
-		server.bind(new InetSocketAddress("localhost", 53535));
+		server.bind(new InetSocketAddress("localhost", 7575));
 		// set the channel in non blocking mode
 		server.configureBlocking(false);
 		// register the channel with the selector or the accept operation
@@ -60,9 +63,10 @@ public class ConcurrentServer {
 
 	private static void readClientBytes(SelectionKey key) throws IOException {
 		SocketChannel client = (SocketChannel) key.channel();
-
+		
+		
 		// Read byte coming from the client
-		int BUFFER_SIZE = 256;
+		int BUFFER_SIZE = 50;
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		try {
 			if (client.read(buffer) == -1) {
@@ -83,7 +87,20 @@ public class ConcurrentServer {
 		CharBuffer charBuffer = decoder.decode(buffer);
 		int port = client.socket().getPort();
 		System.out.println(port + ": " + charBuffer.toString());
-		return;
-
+		Integer sum = 0;
+		String input = charBuffer.toString();
+		
+		for(Character c : input.toCharArray()) {
+			sum += Integer.valueOf(c.toString());
+		}
+		
+		String msg;
+		if(sum%2 == 0) {
+			msg = "1";		
+		}else {
+			msg = "0";
+		}
+		
+		client.write(ByteBuffer.wrap(msg.getBytes(charset)));
 	}
 }
